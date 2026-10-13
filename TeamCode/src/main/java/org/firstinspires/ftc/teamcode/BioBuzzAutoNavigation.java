@@ -312,173 +312,100 @@ public class BioBuzzAutoNavigation extends LinearOpMode {
     // NAVIGATE TO A POINT
     // ============================================================
 
+    
+    // ============================================================
+    // NAVIGATE TO A POINT USING BioBuzzNavigationMath
+    // ============================================================
+
     private void navigateToPoint(
             double targetX,
             double targetY,
             String name
     ) {
-
-        // --------------------------------------------------------
-        // CALCULATE DIFFERENCE IN X AND Y
-        // --------------------------------------------------------
-
-        double dx = targetX - robotX;
-        double dy = targetY - robotY;
-
-
-        // --------------------------------------------------------
-        // CALCULATE DISTANCE
-        // --------------------------------------------------------
-
-        double distance = Math.sqrt(
-                (dx * dx) +
-                (dy * dy)
-        );
-
-
-        // --------------------------------------------------------
-        // CALCULATE TARGET ANGLE
-        //
-        // atan2 gives us the angle from the current position
-        // to the target.
-        // --------------------------------------------------------
-
-        double targetAngle =
-                Math.toDegrees(
-                        Math.atan2(dy, dx)
+        // Ask the math file to calculate the route.
+        BioBuzzNavigationMath.MovementPlan plan =
+                BioBuzzNavigationMath.createMovementPlan(
+                        robotX,
+                        robotY,
+                        robotHeading,
+                        targetX,
+                        targetY
                 );
 
-
-        // Convert negative angles to 0-360
-
-        if (targetAngle < 0) {
-            targetAngle += 360;
-        }
-
-
-        // --------------------------------------------------------
-        // CALCULATE TURN
-        // --------------------------------------------------------
-
-        double turnAmount =
-                getAngleDifference(
-                        targetAngle,
-                        robotHeading
-                );
-
-
-        // --------------------------------------------------------
-        // DISPLAY CALCULATIONS
-        // --------------------------------------------------------
-
+        // Display the calculated route.
         telemetry.addLine("");
         telemetry.addLine("======================");
         telemetry.addData("Destination", name);
         telemetry.addLine("======================");
 
-        telemetry.addData(
-                "Current X",
-                robotX
-        );
+        telemetry.addData("Starting X", plan.startX);
+        telemetry.addData("Starting Y", plan.startY);
+        telemetry.addData("Starting Heading", plan.startHeading);
 
-        telemetry.addData(
-                "Current Y",
-                robotY
-        );
+        telemetry.addData("Target X", plan.targetX);
+        telemetry.addData("Target Y", plan.targetY);
 
-        telemetry.addData(
-                "Target X",
-                targetX
-        );
-
-        telemetry.addData(
-                "Target Y",
-                targetY
-        );
-
-        telemetry.addData(
-                "Delta X",
-                dx
-        );
-
-        telemetry.addData(
-                "Delta Y",
-                dy
-        );
-
-        telemetry.addData(
-                "Distance",
-                distance
-        );
-
-        telemetry.addData(
-                "Target Angle",
-                targetAngle
-        );
-
-        telemetry.addData(
-                "Turn Amount",
-                turnAmount
-        );
+        telemetry.addData("Target Angle", plan.targetAngle);
+        telemetry.addData("Turn Direction", plan.turnDirection);
+        telemetry.addData("Turn Amount", plan.turnAmount);
+        telemetry.addData("Distance", plan.distance);
 
         telemetry.update();
 
-
         sleep(500);
 
+        // Execute the actions calculated by BioBuzzNavigationMath.
+        for (BioBuzzNavigationMath.MovementAction action
+                : plan.actions) {
 
-        // --------------------------------------------------------
-        // TURN
-        // --------------------------------------------------------
+            // Stop executing if the autonomous period is stopped.
+            if (!opModeIsActive()) {
+                stopDrive();
+                return;
+            }
 
-        turnToHeading(targetAngle);
+            switch (action.type) {
 
+                case TURN_TO_HEADING:
+                    // Actually turn the robot using the IMU.
+                    turnToHeading(action.value);
+                    break;
 
-        // --------------------------------------------------------
-        // DRIVE
-        // --------------------------------------------------------
+                case DRIVE_FORWARD:
+                    // Actually drive using the motor encoders.
+                    driveForward(action.value);
+                    break;
 
-        driveForward(distance);
+                case STOP:
+                    // Stop all four drive motors.
+                    stopDrive();
+                    break;
+            }
+        }
 
+        // Do not report reaching the target if autonomous stopped.
+        if (!opModeIsActive()) {
+            stopDrive();
+            return;
+        }
 
-        // --------------------------------------------------------
-        // UPDATE OUR CALCULATED POSITION
-        // --------------------------------------------------------
-
-        robotX = targetX;
-        robotY = targetY;
-        robotHeading = targetAngle;
-
+        // Update the estimated position after completing the route.
+        robotX = plan.targetX;
+        robotY = plan.targetY;
+        robotHeading = plan.targetAngle;
 
         stopDrive();
 
-
         telemetry.addLine("");
-        telemetry.addData(
-                "Reached",
-                name
-        );
-
-        telemetry.addData(
-                "New X",
-                robotX
-        );
-
-        telemetry.addData(
-                "New Y",
-                robotY
-        );
-
-        telemetry.addData(
-                "New Heading",
-                robotHeading
-        );
-
+        telemetry.addData("Reached", name);
+        telemetry.addData("New X", robotX);
+        telemetry.addData("New Y", robotY);
+        telemetry.addData("New Heading", robotHeading);
         telemetry.update();
-
 
         sleep(500);
     }
+
 
 
     // ============================================================
