@@ -435,6 +435,7 @@ public class BioBuzzAutoNavigation extends LinearOpMode {
         return reachedTarget && opModeIsActive();
     }
 
+    
     // ============================================================
     // DRIVE FORWARD
     // ============================================================
@@ -447,16 +448,24 @@ public class BioBuzzAutoNavigation extends LinearOpMode {
         telemetry.addData("Target Distance", distanceInches);
         telemetry.update();
 
-        while (opModeIsActive()) {
+        // Safety timeout: allow up to 10 seconds per drive command.
+        long driveStartTime = System.currentTimeMillis();
+        boolean reachedTarget = false;
+
+        while (opModeIsActive()
+                && System.currentTimeMillis() - driveStartTime < 10000) {
+
             double distance = getDistanceTraveled();
 
             // TARGET REACHED
             if (distance >= distanceInches) {
+                reachedTarget = true;
                 break;
             }
 
             // DRIVE POWER
             double drivePower = 0.6;
+
             leftFrontDrive.setPower(drivePower);
             rightFrontDrive.setPower(drivePower);
             leftBackDrive.setPower(drivePower);
@@ -465,13 +474,27 @@ public class BioBuzzAutoNavigation extends LinearOpMode {
             // TELEMETRY
             telemetry.addData("Target", distanceInches);
             telemetry.addData("Distance", distance);
+            telemetry.addData(
+                    "Time Remaining (ms)",
+                    Math.max(
+                            0,
+                            10000 - (System.currentTimeMillis() - driveStartTime)
+                    )
+            );
             telemetry.update();
 
             idle();
         }
 
         stopDrive();
+
+        // Report if the target distance was not reached.
+        if (!reachedTarget && opModeIsActive()) {
+            telemetry.addLine("WARNING: Drive timed out!");
+            telemetry.update();
+        }
     }
+
 
     // ============================================================
     // RESET ENCODERS
