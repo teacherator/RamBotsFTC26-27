@@ -1,3 +1,4 @@
+
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
@@ -80,7 +81,6 @@ public class BioBuzzAutoNavigation extends LinearOpMode {
     private static final double PARKING_X = 40;
     private static final double PARKING_Y = 140;
 
-
     // ============================================================
     // INTERNAL ROBOT POSITION
     // ============================================================
@@ -88,7 +88,6 @@ public class BioBuzzAutoNavigation extends LinearOpMode {
     private double robotX;
     private double robotY;
     private double robotHeading;
-
 
     @Override
     public void runOpMode() {
@@ -117,49 +116,24 @@ public class BioBuzzAutoNavigation extends LinearOpMode {
                 "backRightMotor"
         );
 
-
         // ========================================================
         // MOTOR DIRECTIONS
         // Same as your TeleOp
         // ========================================================
 
-        leftFrontDrive.setDirection(
-                DcMotor.Direction.REVERSE
-        );
-
-        rightFrontDrive.setDirection(
-                DcMotor.Direction.FORWARD
-        );
-
-        leftBackDrive.setDirection(
-                DcMotor.Direction.REVERSE
-        );
-
-        rightBackDrive.setDirection(
-                DcMotor.Direction.FORWARD
-        );
-
+        leftFrontDrive.setDirection(DcMotor.Direction.REVERSE);
+        rightFrontDrive.setDirection(DcMotor.Direction.FORWARD);
+        leftBackDrive.setDirection(DcMotor.Direction.REVERSE);
+        rightBackDrive.setDirection(DcMotor.Direction.FORWARD);
 
         // ========================================================
         // BRAKE
         // ========================================================
 
-        leftFrontDrive.setZeroPowerBehavior(
-                DcMotor.ZeroPowerBehavior.BRAKE
-        );
-
-        rightFrontDrive.setZeroPowerBehavior(
-                DcMotor.ZeroPowerBehavior.BRAKE
-        );
-
-        leftBackDrive.setZeroPowerBehavior(
-                DcMotor.ZeroPowerBehavior.BRAKE
-        );
-
-        rightBackDrive.setZeroPowerBehavior(
-                DcMotor.ZeroPowerBehavior.BRAKE
-        );
-
+        leftFrontDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightFrontDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        leftBackDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rightBackDrive.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // ========================================================
         // ENCODERS
@@ -167,12 +141,11 @@ public class BioBuzzAutoNavigation extends LinearOpMode {
 
         resetEncoders();
 
-
         // ========================================================
         // IMU
         // ========================================================
 
-       imu = hardwareMap.get(IMU.class, "imu");
+        imu = hardwareMap.get(IMU.class, "imu");
 
         RevHubOrientationOnRobot orientationOnRobot =
                 new RevHubOrientationOnRobot(
@@ -180,9 +153,7 @@ public class BioBuzzAutoNavigation extends LinearOpMode {
                         RevHubOrientationOnRobot.UsbFacingDirection.FORWARD
                 );
 
-        imu.initialize(
-                new IMU.Parameters(orientationOnRobot)
-        );
+        imu.initialize(new IMU.Parameters(orientationOnRobot));
 
         // Reset the IMU heading to zero.
         imu.resetYaw();
@@ -195,20 +166,15 @@ public class BioBuzzAutoNavigation extends LinearOpMode {
         robotY = START_ROBOT_Y;
         robotHeading = START_ROBOT_HEADING;
 
-
         // ========================================================
         // SHOW STARTING INFORMATION
         // ========================================================
 
         telemetry.addLine("BioBuzz Auto Navigation");
         telemetry.addLine("-----------------------");
-
         telemetry.addData("Starting X", robotX);
         telemetry.addData("Starting Y", robotY);
-        telemetry.addData(
-                "Starting Heading",
-                robotHeading
-        );
+        telemetry.addData("Starting Heading", robotHeading);
 
         telemetry.addLine("");
         telemetry.addLine("Ball 1:");
@@ -227,9 +193,7 @@ public class BioBuzzAutoNavigation extends LinearOpMode {
 
         telemetry.addLine("");
         telemetry.addLine("Waiting for START...");
-
         telemetry.update();
-
 
         // ========================================================
         // WAIT FOR START
@@ -238,53 +202,39 @@ public class BioBuzzAutoNavigation extends LinearOpMode {
         waitForStart();
 
         if (isStopRequested()) {
+            stopDrive();
             return;
         }
 
-
         // ========================================================
         // AUTONOMOUS ROUTE
+        // Stop the route if a turn fails or autonomous is stopped.
         // ========================================================
 
-        // Go to Ball 1
-        navigateToPoint(
-                BALL_1_X,
-                BALL_1_Y,
-                "Ball 1"
-        );
+        if (!navigateToPoint(BALL_1_X, BALL_1_Y, "Ball 1")) {
+            stopDrive();
+            return;
+        }
 
+        if (!navigateToPoint(BALL_2_X, BALL_2_Y, "Ball 2")) {
+            stopDrive();
+            return;
+        }
 
-        // Go to Ball 2
-        navigateToPoint(
-                BALL_2_X,
-                BALL_2_Y,
-                "Ball 2"
-        );
+        if (!navigateToPoint(BALL_3_X, BALL_3_Y, "Ball 3")) {
+            stopDrive();
+            return;
+        }
 
+        if (!navigateToPoint(HOOP_X, HOOP_Y, "Hoop")) {
+            stopDrive();
+            return;
+        }
 
-        // Go to Ball 3
-        navigateToPoint(
-                BALL_3_X,
-                BALL_3_Y,
-                "Ball 3"
-        );
-
-
-        // Go to Hoop
-        navigateToPoint(
-                HOOP_X,
-                HOOP_Y,
-                "Hoop"
-        );
-
-
-        // Go to Parking
-        navigateToPoint(
-                PARKING_X,
-                PARKING_Y,
-                "Parking"
-        );
-
+        if (!navigateToPoint(PARKING_X, PARKING_Y, "Parking")) {
+            stopDrive();
+            return;
+        }
 
         // ========================================================
         // FINISHED
@@ -296,30 +246,19 @@ public class BioBuzzAutoNavigation extends LinearOpMode {
         telemetry.addLine("======================");
         telemetry.addLine("AUTONOMOUS COMPLETE");
         telemetry.addLine("======================");
-
         telemetry.addData("Final X", robotX);
         telemetry.addData("Final Y", robotY);
-        telemetry.addData(
-                "Final Heading",
-                robotHeading
-        );
-
+        telemetry.addData("Final Heading", robotHeading);
         telemetry.update();
 
         sleep(3000);
     }
 
-
-    // ============================================================
-    // NAVIGATE TO A POINT
-    // ============================================================
-
-    
     // ============================================================
     // NAVIGATE TO A POINT USING BioBuzzNavigationMath
     // ============================================================
 
-    private void navigateToPoint(
+    private boolean navigateToPoint(
             double targetX,
             double targetY,
             String name
@@ -339,38 +278,36 @@ public class BioBuzzAutoNavigation extends LinearOpMode {
         telemetry.addLine("======================");
         telemetry.addData("Destination", name);
         telemetry.addLine("======================");
-
         telemetry.addData("Starting X", plan.startX);
         telemetry.addData("Starting Y", plan.startY);
         telemetry.addData("Starting Heading", plan.startHeading);
-
         telemetry.addData("Target X", plan.targetX);
         telemetry.addData("Target Y", plan.targetY);
-
         telemetry.addData("Target Angle", plan.targetAngle);
         telemetry.addData("Turn Direction", plan.turnDirection);
         telemetry.addData("Turn Amount", plan.turnAmount);
         telemetry.addData("Distance", plan.distance);
-
         telemetry.update();
 
         sleep(500);
 
         // Execute the actions calculated by BioBuzzNavigationMath.
-        for (BioBuzzNavigationMath.MovementAction action
-                : plan.actions) {
+        for (BioBuzzNavigationMath.MovementAction action : plan.actions) {
 
-            // Stop executing if the autonomous period is stopped.
             if (!opModeIsActive()) {
                 stopDrive();
-                return;
+                return false;
             }
 
             switch (action.type) {
-
                 case TURN_TO_HEADING:
                     // Actually turn the robot using the IMU.
-                    turnToHeading(action.value);
+                    if (!turnToHeading(action.value)) {
+                        stopDrive();
+                        telemetry.addLine("ROUTE STOPPED: Turn failed.");
+                        telemetry.update();
+                        return false;
+                    }
                     break;
 
                 case DRIVE_FORWARD:
@@ -385,10 +322,9 @@ public class BioBuzzAutoNavigation extends LinearOpMode {
             }
         }
 
-        // Do not report reaching the target if autonomous stopped.
         if (!opModeIsActive()) {
             stopDrive();
-            return;
+            return false;
         }
 
         // Update the estimated position after completing the route.
@@ -406,366 +342,181 @@ public class BioBuzzAutoNavigation extends LinearOpMode {
         telemetry.update();
 
         sleep(500);
+        return opModeIsActive();
     }
-
-
-
-    // ============================================================
-    // CALCULATE SHORTEST ANGLE DIFFERENCE
-    // ============================================================
-
-    private double getAngleDifference(
-            double targetAngle,
-            double currentAngle
-    ) {
-
-        double difference =
-                targetAngle - currentAngle;
-
-
-        while (difference > 180) {
-            difference -= 360;
-        }
-
-
-        while (difference < -180) {
-            difference += 360;
-        }
-
-
-        return difference;
-    }
-
 
     // ============================================================
     // GET CURRENT IMU HEADING
     // ============================================================
 
     private double getCurrentHeading() {
-
         return imu
                 .getRobotYawPitchRollAngles()
                 .getYaw(AngleUnit.DEGREES);
     }
 
-
     // ============================================================
     // GET HEADING ERROR
     // ============================================================
 
-    private double getHeadingError(
-            double targetHeading
-    ) {
-
-        double currentHeading =
-                getCurrentHeading();
-
-
-        double error =
-                targetHeading - currentHeading;
-
+    private double getHeadingError(double targetHeading) {
+        double currentHeading = getCurrentHeading();
+        double error = targetHeading - currentHeading;
 
         while (error > 180) {
             error -= 360;
         }
 
-
         while (error < -180) {
             error += 360;
         }
 
-
         return error;
     }
-
 
     // ============================================================
     // TURN TO HEADING
     // ============================================================
 
-    private void turnToHeading(
-            double targetHeading
-    ) {
-
+    private boolean turnToHeading(double targetHeading) {
         telemetry.addLine("");
         telemetry.addLine("TURNING");
-        telemetry.addData(
-                "Target",
-                targetHeading
-        );
-
+        telemetry.addData("Target", targetHeading);
         telemetry.update();
 
+        long turnStartTime = System.currentTimeMillis();
+        boolean reachedTarget = false;
 
-        while (opModeIsActive()) {
+        while (opModeIsActive()
+                && System.currentTimeMillis() - turnStartTime < 5000) {
 
-            double error =
-                    getHeadingError(
-                            targetHeading
-                    );
+            double error = getHeadingError(targetHeading);
 
-
-            // ----------------------------------------------------
             // CLOSE ENOUGH
-            // ----------------------------------------------------
-
             if (Math.abs(error) <= 2) {
+                reachedTarget = true;
                 break;
             }
 
-
-            // ----------------------------------------------------
             // PROPORTIONAL TURN POWER
-            // ----------------------------------------------------
+            double turnPower = error * 0.01;
+            turnPower = Math.max(-0.5, Math.min(0.5, turnPower));
 
-            double turnPower =
-                    error * 0.01;
-
-
-            // Maximum turn power
-
-            turnPower =
-                    Math.max(
-                            -0.5,
-                            Math.min(
-                                    0.5,
-                                    turnPower
-                            )
-                    );
-
-
-            // ----------------------------------------------------
             // TURN
-            // ----------------------------------------------------
+            leftFrontDrive.setPower(-turnPower);
+            rightFrontDrive.setPower(turnPower);
+            leftBackDrive.setPower(-turnPower);
+            rightBackDrive.setPower(turnPower);
 
-            leftFrontDrive.setPower(
-                    -turnPower
-            );
-
-            rightFrontDrive.setPower(
-                    turnPower
-            );
-
-            leftBackDrive.setPower(
-                    -turnPower
-            );
-
-            rightBackDrive.setPower(
-                    turnPower
-            );
-
-
-            // ----------------------------------------------------
             // TELEMETRY
-            // ----------------------------------------------------
+            telemetry.addData("Target Heading", targetHeading);
+            telemetry.addData("Current Heading", getCurrentHeading());
+            telemetry.addData("Error", error);
+            telemetry.addData("Power", turnPower);
+            telemetry.update();
 
-            telemetry.addData(
-                    "Target Heading",
-                    targetHeading
-            );
+            // Yield briefly so the OpMode loop can process updates.
+            idle();
+        }
 
-            telemetry.addData(
-                    "Current Heading",
-                    getCurrentHeading()
-            );
+        // Recheck the heading after the loop in case it reached the target
+        // on the final iteration.
+        if (opModeIsActive()
+                && Math.abs(getHeadingError(targetHeading)) <= 2) {
+            reachedTarget = true;
+        }
 
-            telemetry.addData(
-                    "Error",
-                    error
-            );
-
-            telemetry.addData(
-                    "Power",
-                    turnPower
-            );
-
+        if (!reachedTarget && opModeIsActive()) {
+            telemetry.addLine("WARNING: Turn timed out!");
             telemetry.update();
         }
 
-
         stopDrive();
+        return reachedTarget && opModeIsActive();
     }
-
 
     // ============================================================
     // DRIVE FORWARD
     // ============================================================
 
-    private void driveForward(
-            double distanceInches
-    ) {
-
+    private void driveForward(double distanceInches) {
         resetEncoders();
-
 
         telemetry.addLine("");
         telemetry.addLine("DRIVING");
-        telemetry.addData(
-                "Target Distance",
-                distanceInches
-        );
-
+        telemetry.addData("Target Distance", distanceInches);
         telemetry.update();
 
-
         while (opModeIsActive()) {
+            double distance = getDistanceTraveled();
 
-            double distance =
-                    getDistanceTraveled();
-
-
-            // ----------------------------------------------------
             // TARGET REACHED
-            // ----------------------------------------------------
-
             if (distance >= distanceInches) {
                 break;
             }
 
-
-            // ----------------------------------------------------
             // DRIVE POWER
-            // ----------------------------------------------------
-
             double drivePower = 0.6;
+            leftFrontDrive.setPower(drivePower);
+            rightFrontDrive.setPower(drivePower);
+            leftBackDrive.setPower(drivePower);
+            rightBackDrive.setPower(drivePower);
 
-
-            leftFrontDrive.setPower(
-                    drivePower
-            );
-
-            rightFrontDrive.setPower(
-                    drivePower
-            );
-
-            leftBackDrive.setPower(
-                    drivePower
-            );
-
-            rightBackDrive.setPower(
-                    drivePower
-            );
-
-
-            // ----------------------------------------------------
             // TELEMETRY
-            // ----------------------------------------------------
-
-            telemetry.addData(
-                    "Target",
-                    distanceInches
-            );
-
-            telemetry.addData(
-                    "Distance",
-                    distance
-            );
-
+            telemetry.addData("Target", distanceInches);
+            telemetry.addData("Distance", distance);
             telemetry.update();
-        }
 
+            idle();
+        }
 
         stopDrive();
     }
-
 
     // ============================================================
     // RESET ENCODERS
     // ============================================================
 
     private void resetEncoders() {
+        leftFrontDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightFrontDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        leftBackDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        rightBackDrive.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-        leftFrontDrive.setMode(
-                DcMotor.RunMode.STOP_AND_RESET_ENCODER
-        );
-
-        rightFrontDrive.setMode(
-                DcMotor.RunMode.STOP_AND_RESET_ENCODER
-        );
-
-        leftBackDrive.setMode(
-                DcMotor.RunMode.STOP_AND_RESET_ENCODER
-        );
-
-        rightBackDrive.setMode(
-                DcMotor.RunMode.STOP_AND_RESET_ENCODER
-        );
-
-
-        leftFrontDrive.setMode(
-                DcMotor.RunMode.RUN_USING_ENCODER
-        );
-
-        rightFrontDrive.setMode(
-                DcMotor.RunMode.RUN_USING_ENCODER
-        );
-
-        leftBackDrive.setMode(
-                DcMotor.RunMode.RUN_USING_ENCODER
-        );
-
-        rightBackDrive.setMode(
-                DcMotor.RunMode.RUN_USING_ENCODER
-        );
+        leftFrontDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightFrontDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftBackDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        rightBackDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
-
 
     // ============================================================
     // GET AVERAGE ENCODER TICKS
     // ============================================================
 
     private double getAverageEncoderTicks() {
+        double leftFront = Math.abs(leftFrontDrive.getCurrentPosition());
+        double rightFront = Math.abs(rightFrontDrive.getCurrentPosition());
+        double leftBack = Math.abs(leftBackDrive.getCurrentPosition());
+        double rightBack = Math.abs(rightBackDrive.getCurrentPosition());
 
-        double leftFront =
-                Math.abs(
-                        leftFrontDrive.getCurrentPosition()
-                );
-
-        double rightFront =
-                Math.abs(
-                        rightFrontDrive.getCurrentPosition()
-                );
-
-        double leftBack =
-                Math.abs(
-                        leftBackDrive.getCurrentPosition()
-                );
-
-        double rightBack =
-                Math.abs(
-                        rightBackDrive.getCurrentPosition()
-                );
-
-
-        return (
-                leftFront +
-                rightFront +
-                leftBack +
-                rightBack
-        ) / 4.0;
+        return (leftFront + rightFront + leftBack + rightBack) / 4.0;
     }
-
 
     // ============================================================
     // GET DISTANCE TRAVELED
     // ============================================================
 
     private double getDistanceTraveled() {
-
-        return getAverageEncoderTicks()
-                / TICKS_PER_INCH;
+        return getAverageEncoderTicks() / TICKS_PER_INCH;
     }
-
 
     // ============================================================
     // STOP DRIVE
     // ============================================================
 
     private void stopDrive() {
-
         leftFrontDrive.setPower(0);
         rightFrontDrive.setPower(0);
-
         leftBackDrive.setPower(0);
         rightBackDrive.setPower(0);
     }
