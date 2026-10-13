@@ -172,7 +172,7 @@ public class BioBuzzAutoNavigation extends LinearOpMode {
         // IMU
         // ========================================================
 
-        imu = hardwareMap.get(IMU.class, "imu");
+       imu = hardwareMap.get(IMU.class, "imu");
 
         RevHubOrientationOnRobot orientationOnRobot =
                 new RevHubOrientationOnRobot(
@@ -184,6 +184,8 @@ public class BioBuzzAutoNavigation extends LinearOpMode {
                 new IMU.Parameters(orientationOnRobot)
         );
 
+        // Reset the IMU heading to zero.
+        imu.resetYaw();
 
         // ========================================================
         // SET INITIAL POSITION
