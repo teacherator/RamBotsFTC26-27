@@ -101,15 +101,15 @@ public class BioBuzzStarterbotTeleopMecanum extends OpMode {
          * to 'get' must correspond to the names assigned during the robot configuration
          * step.
          */
-        leftFrontDrive = hardwareMap.get(DcMotor.class, "left_front_drive");
-        rightFrontDrive = hardwareMap.get(DcMotor.class, "right_front_drive");
-        leftBackDrive = hardwareMap.get(DcMotor.class, "left_back_drive");
-        rightBackDrive = hardwareMap.get(DcMotor.class, "right_back_drive");
-        intake = hardwareMap.get(DcMotor.class, "intake");
-        launcher = hardwareMap.get(DcMotorEx.class, "launcher");
-        windmillServo = hardwareMap.get(CRServo.class, "windmillServo");
-        leftIntakeServo = hardwareMap.get(CRServo.class, "left_intake_servo");
-        rightIntakeServo = hardwareMap.get(CRServo.class, "right_intake_servo");
+        leftFrontDrive = hardwareMap.get(DcMotor.class, "frontLeftMotor"); //CH 0
+        rightFrontDrive = hardwareMap.get(DcMotor.class, "frontRightMotor"); //CH 1
+        leftBackDrive = hardwareMap.get(DcMotor.class, "backLeftMotor");//CH 2
+        rightBackDrive = hardwareMap.get(DcMotor.class, "backRightMotor"); //CH 3
+        intake = hardwareMap.get(DcMotor.class, "intake");//EH 0
+        launcher = hardwareMap.get(DcMotorEx.class, "launcher"); //CH 1
+        windmillServo = hardwareMap.get(CRServo.class, "windmillServo"); //CH 0
+        leftIntakeServo = hardwareMap.get(CRServo.class, "leftIntakeServo"); //CH 1
+        rightIntakeServo = hardwareMap.get(CRServo.class, "rightIntakeServo"); //CH 2
 
         /*
          * To drive forward, most robots need the motor on one side to be reversed,
