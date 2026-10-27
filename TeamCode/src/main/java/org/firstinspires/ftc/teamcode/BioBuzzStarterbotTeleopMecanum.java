@@ -100,6 +100,7 @@ public class BioBuzzStarterbotTeleopMecanum extends OpMode {
          * Initialize the hardware variables. Note that the strings used here as parameters
          * to 'get' must correspond to the names assigned during the robot configuration
          * step.
+         * changed names to our camel case convention
          */
         leftFrontDrive = hardwareMap.get(DcMotor.class, "frontLeftMotor"); //CH 0
         rightFrontDrive = hardwareMap.get(DcMotor.class, "frontRightMotor"); //CH 1
