@@ -104,14 +104,21 @@ public class BioBuzzAutoSimple extends OpMode {
             case MOVE:
                 // Move based on selected alliance (RED = Strafe Left, BLUE = Strafe Right)
                 if (alliance == Alliance.RED) {
-                    move(Direction.LEFT);
+                    //move(Direction.LEFT);
+                    move(Direction.FORWARD);
                 } else {
-                    move(Direction.RIGHT);
+                    //move(Direction.RIGHT);
+                    move(Direction.FORWARD);
                 }
 
                 if (timer.seconds() >= moveTime) {
-                    mecanum_drivetrain(0, 0, 0); // Stop robot drivetrain
+                    //mecanum_drivetrain(0, 0, 0); // Stop robot drivetrain
+                    move(Direction.BACKWARD);
                     autoState = AutoState.SPIN_UP;
+                }
+                if (timer.seconds() >= moveTime*2) {
+                    mecanum_drivetrain(0, 0, 0); // Stop robot drivetrain
+                    autoState = AutoState.DONE;
                 }
                 break;
 
@@ -180,7 +187,7 @@ public class BioBuzzAutoSimple extends OpMode {
         telemetry.addData("Alliance", alliance);
         telemetry.addData("Auto State", autoState);
         telemetry.addData("Timer (s)", "%.2f", timer.seconds());
-        telemetry.addData("Launcher Speed", launcher.getVelocity());
+        //telemetry.addData("Launcher Speed", launcher.getVelocity());
         telemetry.addData("Motors", "FL: %.2f, FR: %.2f, BL: %.2f, BR: %.2f",
                 frontLeftPower, frontRightPower, backLeftPower, backRightPower);
     }
