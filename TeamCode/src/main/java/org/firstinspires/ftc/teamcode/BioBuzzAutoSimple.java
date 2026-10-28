@@ -29,10 +29,10 @@ public class BioBuzzAutoSimple extends OpMode {
     public DcMotor frontRightMotor;
     public DcMotor backLeftMotor;
     public DcMotor backRightMotor;
-
+/*
     private CRServo leftFeeder = null;
     private CRServo rightFeeder = null;
-
+*/
     double frontLeftPower = 0;
     double frontRightPower = 0;
     double backLeftPower = 0;
@@ -66,6 +66,7 @@ public class BioBuzzAutoSimple extends OpMode {
         frontRightMotor.setZeroPowerBehavior(BRAKE);
         backLeftMotor.setZeroPowerBehavior(BRAKE);
         backRightMotor.setZeroPowerBehavior(BRAKE);
+        /*
         launcher.setZeroPowerBehavior(BRAKE);
 
         leftFeeder = hardwareMap.get(CRServo.class, "left_feeder");
@@ -74,7 +75,7 @@ public class BioBuzzAutoSimple extends OpMode {
         leftFeeder.setDirection(DcMotorSimple.Direction.REVERSE);
         leftFeeder.setPower(STOP_SPEED);
         rightFeeder.setPower(STOP_SPEED);
-
+*/
         telemetry.addData("Status", "Initialized");
     }
 
@@ -115,29 +116,29 @@ public class BioBuzzAutoSimple extends OpMode {
                 break;
 
             case SPIN_UP:
-                launcher.setVelocity(LAUNCHER_TARGET_VELOCITY);
+                /*launcher.setVelocity(LAUNCHER_TARGET_VELOCITY);
                 if (launcher.getVelocity() >= LAUNCHER_MIN_VELOCITY) {
                     shootTimer.reset();
                     autoState = AutoState.SHOOT;
-                }
+                }*/
                 break;
 
             case SHOOT:
-                leftFeeder.setPower(FULL_SPEED);
+                /*leftFeeder.setPower(FULL_SPEED);
                 rightFeeder.setPower(FULL_SPEED);
                 if (shootTimer.seconds() >= FEED_TIME_SECONDS) {
                     leftFeeder.setPower(STOP_SPEED);
                     rightFeeder.setPower(STOP_SPEED);
                     launcher.setVelocity(STOP_SPEED);
                     autoState = AutoState.DONE;
-                }
+                }*/
                 break;
 
             case DONE:
                 mecanum_drivetrain(0, 0, 0);
-                launcher.setVelocity(STOP_SPEED);
+                /*launcher.setVelocity(STOP_SPEED);
                 leftFeeder.setPower(STOP_SPEED);
-                rightFeeder.setPower(STOP_SPEED);
+                rightFeeder.setPower(STOP_SPEED);*/
                 break;
         }
 
