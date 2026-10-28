@@ -277,6 +277,7 @@ public class BioBuzzStarterbotTeleopMecanum extends OpMode {
          */
         if (gamepad1.right_bumper) {
             launcher.setVelocity(LAUNCHER_TARGET_VELOCITY);
+
         } else {
             launcher.setVelocity(0);
         }
