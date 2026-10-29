@@ -15,7 +15,7 @@ Description: Autonomous OpMode for the Decode season.
 Strafes based on selected alliance, spins up the launcher, feeds game elements, and stops.
  */
 
-@Autonomous(name="Shoot Auto Decode", group="Use This")
+@Autonomous(name="Simple Auto", group="Use This")
 public class BioBuzzAutoSimple extends OpMode {
     final double FEED_TIME_SECONDS = 1.0;
     final double STOP_SPEED = 0.0;
