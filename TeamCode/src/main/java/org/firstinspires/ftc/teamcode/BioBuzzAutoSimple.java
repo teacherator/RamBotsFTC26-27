@@ -59,8 +59,13 @@ public class BioBuzzAutoSimple extends OpMode {
         backLeftMotor = hardwareMap.get(DcMotor.class, "backLeftMotor");
         backRightMotor = hardwareMap.get(DcMotor.class, "backRightMotor");
 
-        frontRightMotor.setDirection(DcMotor.Direction.REVERSE);
-        backRightMotor.setDirection(DcMotor.Direction.REVERSE);
+       // frontRightMotor.setDirection(DcMotor.Direction.REVERSE);
+      //  backRightMotor.setDirection(DcMotor.Direction.REVERSE);
+
+        frontLeftMotor.setDirection(DcMotor.Direction.REVERSE);
+        frontRightMotor.setDirection(DcMotor.Direction.FORWARD);
+        backLeftMotor.setDirection(DcMotor.Direction.REVERSE);
+        backRightMotor.setDirection(DcMotor.Direction.FORWARD);
 
         frontLeftMotor.setZeroPowerBehavior(BRAKE);
         frontRightMotor.setZeroPowerBehavior(BRAKE);
@@ -103,20 +108,24 @@ public class BioBuzzAutoSimple extends OpMode {
         switch (autoState) {
             case MOVE:
                 // Move based on selected alliance (RED = Strafe Left, BLUE = Strafe Right)
-                if (alliance == Alliance.RED) {
+                if (alliance == Alliance.RED && timer.seconds()<moveTime) {
                     //move(Direction.LEFT);
                     move(Direction.FORWARD);
-                } else {
+                } else if (timer.seconds()<moveTime) {
                     //move(Direction.RIGHT);
                     move(Direction.FORWARD);
                 }
 
                 if (timer.seconds() >= moveTime) {
-                    //mecanum_drivetrain(0, 0, 0); // Stop robot drivetrain
-                    move(Direction.BACKWARD);
-                    autoState = AutoState.SPIN_UP;
+                    mecanum_drivetrain(0, 0, 0); // Stop robot drivetrain
+                   // move(Direction.BACKWARD);
+                    //autoState = AutoState.SPIN_UP;
                 }
-                if (timer.seconds() >= moveTime*2) {
+                if (timer.seconds() >= moveTime+2) {
+                    move(Direction.BACKWARD);
+
+                }
+                if (timer.seconds() >= moveTime+5) {
                     mecanum_drivetrain(0, 0, 0); // Stop robot drivetrain
                     autoState = AutoState.DONE;
                 }
@@ -128,6 +137,7 @@ public class BioBuzzAutoSimple extends OpMode {
                     shootTimer.reset();
                     autoState = AutoState.SHOOT;
                 }*/
+                autoState = AutoState.MOVE;
                 break;
 
             case SHOOT:
@@ -152,8 +162,33 @@ public class BioBuzzAutoSimple extends OpMode {
         general_telemetry();
     }
 
-    public void mecanum_drivetrain(double y, double x, double r) {
-        double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(r), 1);
+    public void mecanum_drivetrain(double forward, double strafe, double rotate) {
+
+        frontLeftPower = forward + strafe + rotate;
+        frontRightPower = forward - strafe - rotate;
+        backLeftPower = forward - strafe + rotate;
+        backRightPower = forward + strafe - rotate;
+
+        double max = Math.max(Math.abs(frontLeftPower), Math.abs(frontRightPower));
+        max = Math.max(max, Math.abs(backLeftPower));
+        max = Math.max(max, Math.abs(backRightPower));
+
+        if (max > 1.0) {
+            frontLeftPower /= max;
+            frontRightPower /= max;
+            backLeftPower /= max;
+            backRightPower /= max;
+        }
+
+        /*
+         * Send calculated power to wheels
+         */
+        frontLeftMotor.setPower(frontLeftPower);
+        frontRightMotor.setPower(frontRightPower);
+        backLeftMotor.setPower(backLeftPower);
+        backRightMotor.setPower(backRightPower);
+
+       /* double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(r), 1);
 
         frontLeftPower = (y + x + r) / denominator;
         frontRightPower = (y - x - r) / denominator;
@@ -163,7 +198,7 @@ public class BioBuzzAutoSimple extends OpMode {
         frontLeftMotor.setPower(frontLeftPower);
         frontRightMotor.setPower(frontRightPower);
         backLeftMotor.setPower(backLeftPower);
-        backRightMotor.setPower(backRightPower);
+        backRightMotor.setPower(backRightPower);*/
     }
 
     private void move(Direction direction) {
