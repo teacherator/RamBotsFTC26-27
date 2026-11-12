@@ -36,14 +36,14 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
  * This file includes a teleop (driver-controlled) file for the goBILDA® StarterBot with Mecanum
  * Wheels for the 2026-2027 FIRST® Tech Challenge. On top of a mecanum wheel drivetrain, it uses
  * one motor driving an intake roller, two servos which pull elements out of corners, and a high-speed
- * launcher motor.
+ * bigLauncher motor.
  *
  * Likely the most niche concept we'll use in this example is closed-loop motor velocity control.
  * This control method reads the current speed as reported by the motor's encoder and applies a varying
  * amount of power to reach, and then hold a target velocity. The FTC SDK calls this control method
  * "RUN_USING_ENCODER". This contrasts to the default "RUN_WITHOUT_ENCODER" where you control the power
  * applied to the motor directly.
- * Since the dynamics of a launcher wheel system varies greatly from those of most other FTC mechanisms,
+ * Since the dynamics of a bigLauncher wheel system varies greatly from those of most other FTC mechanisms,
  * we will also need to adjust the "PIDF" coefficients with some that are a better fit for our application.
  */
 
@@ -56,7 +56,8 @@ public class penelopemogszipties extends OpMode {
     private DcMotor leftBackDrive = null;
     private DcMotor rightFrontDrive = null;
     private DcMotor rightBackDrive = null;
-    private DcMotorEx launcher = null;
+    private DcMotorEx bigLauncher = null;
+    private DcMotorEx smallLauncher = null;
     private DcMotor intake = null;
     private CRServo leftIntakeServo = null;
     private CRServo rightIntakeServo = null;
@@ -64,7 +65,7 @@ public class penelopemogszipties extends OpMode {
 
 
     /*
-     * These two variables are used to control the velocity of the launcher motor.
+     * These two variables are used to control the velocity of the bigLauncher motor.
      * They are both in encoder ticks per second. The motors we use in the FIRST Tech Challenge
      * have encoders with a resolution of 28 ticks per revolution. We can convert this to RPM
      * by dividing the value by 28, to get to revolutions per second, before multiplying by 60
@@ -107,7 +108,8 @@ public class penelopemogszipties extends OpMode {
         leftBackDrive = hardwareMap.get(DcMotor.class, "backLeftMotor");//CH 2
         rightBackDrive = hardwareMap.get(DcMotor.class, "backRightMotor"); //CH 3
         intake = hardwareMap.get(DcMotor.class, "intake");//EH 0
-        launcher = hardwareMap.get(DcMotorEx.class, "launcher"); //CH 1
+        bigLauncher = hardwareMap.get(DcMotorEx.class, "bigLauncher"); //CH 1
+        smallLauncher = hardwareMap.get(DcMotorEx.class, "smallLauncher"); //CH 1
         windmillServo = hardwareMap.get(CRServo.class, "windmillServo"); //CH 0
         leftIntakeServo = hardwareMap.get(CRServo.class, "leftIntakeServo"); //CH 1
         rightIntakeServo = hardwareMap.get(CRServo.class, "rightIntakeServo"); //CH 2
@@ -136,16 +138,20 @@ public class penelopemogszipties extends OpMode {
         intake.setZeroPowerBehavior(BRAKE);
 
         /*
-         * Here we set our launcher to the RUN_USING_ENCODER runmode.
+         * Here we set our bigLauncher to the RUN_USING_ENCODER runmode.
          * If you notice that you have no control over the velocity of the motor, it just jumps
          * right to a number much higher than your set point, make sure that your encoders are plugged
          * into the port right beside the motor itself. And that the motors polarity is consistent
          * through any wiring.
          */
 
-        launcher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        bigLauncher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        launcher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(40, 0, 0, 12.5));
+        bigLauncher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(40, 0, 0, 12.5));
+
+        smallLauncher.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+        smallLauncher.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(40, 0, 0, 12.5));
 
         /*
          * set Feeders to an initial value to initialize the servo controller
@@ -272,28 +278,39 @@ public class penelopemogszipties extends OpMode {
          * held down, and false if it is not. Notably, this will continue to be true for every
          * cycle of our code that the driver holds down that bumper.
          * The first step of our launch() function is checking to see if the user is currently
-         * holding down the right gamepad. If they are, then we want to start spinning up the launcher.
-         * Otherwise, we start spinning the launcher down.
+         * holding down the right gamepad. If they are, then we want to start spinning up the bigLauncher.
+         * Otherwise, we start spinning the bigLauncher down.
          */
         if (gamepad1.right_bumper) {
-            launcher.setVelocity(LAUNCHER_TARGET_VELOCITY);
+            bigLauncher.setVelocity(LAUNCHER_TARGET_VELOCITY);
 
         } else {
-            launcher.setVelocity(0);
+            bigLauncher.setVelocity(0);
         }
+        if (gamepad1.left_bumper) {
+            smallLauncher.setVelocity(LAUNCHER_TARGET_VELOCITY);
 
+        } else {
+            smallLauncher.setVelocity(0);
+        }
         /*
-         * Here we ask if the driver is currently pressing the right bumper, AND the launcher is
+         * Here we ask if the driver is currently pressing the right bumper, AND the bigLauncher is
          * spinning fast enough to make a successful shot. If it is, then we will turn on the
-         * windmill servo to start feeding the elements into the launcher motor. We also
+         * windmill servo to start feeding the elements into the bigLauncher motor. We also
          * add some power to the intake power. This can sometimes help dislodge stuck elements from
          * inside the hopper.
          */
-        if (gamepad1.right_bumper && launcher.getVelocity() > LAUNCHER_MIN_VELOCITY) {
+        if (gamepad1.right_bumper && bigLauncher.getVelocity() > LAUNCHER_MIN_VELOCITY) {
             windmillServo.setPower(1);
             intakePower += 0.5;
         } else {
             windmillServo.setPower(0);
+        }
+        if (gamepad1.left_bumper && smallLauncher.getVelocity() > LAUNCHER_MIN_VELOCITY) {
+            windmillServo.setPower(1);
+            intakePower += 0.5;
+        } else {
+            windmillServo.setPower(0); // unnecessary else watchlist
         }
     }
 }
