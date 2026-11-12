@@ -7,22 +7,22 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 /*
-Description: This is the autonomous file we used for the first competition we attended of the Decode season.
+Description: Autonomous OpMode for the Decode season.
+Strafes based on selected alliance, spins up the launcher, feeds game elements, and stops.
  */
 
 @Autonomous(name="Shoot Auto Decode", group="Use This")
 public class ShootAutoDecode extends OpMode {
-    final double FEED_TIME_SECONDS = 0.20;
+    final double FEED_TIME_SECONDS = 1.0;
     final double STOP_SPEED = 0.0;
     final double FULL_SPEED = 1.0;
 
     final double LAUNCHER_TARGET_VELOCITY = 1500;
     final double LAUNCHER_MIN_VELOCITY = 1450;
-    final double STRAFING_CORRECTION = 1.1;
 
     private DcMotorEx launcher = null;
     public DcMotor frontLeftMotor;
@@ -40,17 +40,19 @@ public class ShootAutoDecode extends OpMode {
 
     double moveTime = 2.0; // seconds
 
-    private ElapsedTime timer = new ElapsedTime();
-    private boolean hasMoved = false; // to run the movement only once
+    private final ElapsedTime timer = new ElapsedTime();
+    private final ElapsedTime shootTimer = new ElapsedTime();
 
-    private enum Direction {LEFT, RIGHT, FORWARD, BACKWARD}
+    private enum AutoState { MOVE, SPIN_UP, SHOOT, DONE }
+    private AutoState autoState = AutoState.MOVE;
+
+    private enum Direction { LEFT, RIGHT, FORWARD, BACKWARD }
     private enum Alliance { RED, BLUE }
 
     private Alliance alliance = Alliance.RED;
 
     @Override
     public void init() {
-
         launcher = hardwareMap.get(DcMotorEx.class, "launcher");
         frontLeftMotor = hardwareMap.get(DcMotor.class, "frontLeftMotor");
         frontRightMotor = hardwareMap.get(DcMotor.class, "frontRightMotor");
@@ -66,95 +68,119 @@ public class ShootAutoDecode extends OpMode {
         backRightMotor.setZeroPowerBehavior(BRAKE);
         launcher.setZeroPowerBehavior(BRAKE);
 
-        // --- RESTORED FEEDER LOGIC ---
         leftFeeder = hardwareMap.get(CRServo.class, "left_feeder");
         rightFeeder = hardwareMap.get(CRServo.class, "right_feeder");
 
         leftFeeder.setDirection(DcMotorSimple.Direction.REVERSE);
         leftFeeder.setPower(STOP_SPEED);
         rightFeeder.setPower(STOP_SPEED);
-        // --- END FEEDER LOGIC RESTORE ---
 
         telemetry.addData("Status", "Initialized");
-
-        timer.reset();
     }
 
     @Override
     public void init_loop() {
-        if (gamepad2.square){
+        if (gamepad2.square) {
             alliance = Alliance.RED;
+        } else if (gamepad2.circle) {
+            alliance = Alliance.BLUE;
         }
-        else if (gamepad2.circle) alliance = Alliance.BLUE;
 
-        telemetry.addData("Press circle", "for BLUE");
-        telemetry.addData("Press square", "for RED");
+        telemetry.addData("Press circle", "for BLUE Alliance");
+        telemetry.addData("Press square", "for RED Alliance");
         telemetry.addData("Selected Alliance", alliance);
     }
 
     @Override
+    public void start() {
+        timer.reset();
+        autoState = AutoState.MOVE;
+    }
+
+    @Override
     public void loop() {
-        if (!hasMoved) {
-            move(Direction.LEFT);
-            // Stop after moveTime seconds
-            if (timer.seconds() >= moveTime) {
-                mecanum_drivetrain(0, 0, 0); // stop robot
-                hasMoved = true;
-            }
+        switch (autoState) {
+            case MOVE:
+                // Move based on selected alliance (RED = Strafe Left, BLUE = Strafe Right)
+                if (alliance == Alliance.RED) {
+                    move(Direction.LEFT);
+                } else {
+                    move(Direction.RIGHT);
+                }
+
+                if (timer.seconds() >= moveTime) {
+                    mecanum_drivetrain(0, 0, 0); // Stop robot drivetrain
+                    autoState = AutoState.SPIN_UP;
+                }
+                break;
+
+            case SPIN_UP:
+                launcher.setVelocity(LAUNCHER_TARGET_VELOCITY);
+                if (launcher.getVelocity() >= LAUNCHER_MIN_VELOCITY) {
+                    shootTimer.reset();
+                    autoState = AutoState.SHOOT;
+                }
+                break;
+
+            case SHOOT:
+                leftFeeder.setPower(FULL_SPEED);
+                rightFeeder.setPower(FULL_SPEED);
+                if (shootTimer.seconds() >= FEED_TIME_SECONDS) {
+                    leftFeeder.setPower(STOP_SPEED);
+                    rightFeeder.setPower(STOP_SPEED);
+                    launcher.setVelocity(STOP_SPEED);
+                    autoState = AutoState.DONE;
+                }
+                break;
+
+            case DONE:
+                mecanum_drivetrain(0, 0, 0);
+                launcher.setVelocity(STOP_SPEED);
+                leftFeeder.setPower(STOP_SPEED);
+                rightFeeder.setPower(STOP_SPEED);
+                break;
         }
 
         general_telemetry();
     }
 
-    public void mecanum_drivetrain(float y, float x, float r) {
-        // --- Controller Variables ---
-        //double y = gamepad2.left_stick_y;
-        //double x = -gamepad2.left_stick_x * STRAFING_CORRECTION; //This correction empowers the strafing
-        //double r = -gamepad2.right_stick_x;
+    public void mecanum_drivetrain(double y, double x, double r) {
+        double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(r), 1);
 
-        double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(r), 1); //This is used to scale power variables to [-1,1]
-
-        // --- The Hallowed Mecanum Equations ---
         frontLeftPower = (y + x + r) / denominator;
         frontRightPower = (y - x - r) / denominator;
         backLeftPower = (y - x + r) / denominator;
         backRightPower = (y + x - r) / denominator;
 
-        // --- Set Power ---
         frontLeftMotor.setPower(frontLeftPower);
         frontRightMotor.setPower(frontRightPower);
         backLeftMotor.setPower(backLeftPower);
         backRightMotor.setPower(backRightPower);
     }
 
-    public void move(Direction direction) {
+    private void move(Direction direction) {
         switch (direction) {
             case LEFT:
-                mecanum_drivetrain(0, 1, 0); // strafe left
+                mecanum_drivetrain(0, 0.5, 0); // strafe left
                 break;
             case RIGHT:
-                mecanum_drivetrain(0, -1, 0); // strafe right
+                mecanum_drivetrain(0, -0.5, 0); // strafe right
                 break;
             case FORWARD:
-                mecanum_drivetrain(1, 0, 0); // move forward
+                mecanum_drivetrain(0.5, 0, 0); // move forward
                 break;
             case BACKWARD:
-                mecanum_drivetrain(-1, 0, 0); // move backward
+                mecanum_drivetrain(-0.5, 0, 0); // move backward
                 break;
         }
     }
 
     public void general_telemetry() {
-        telemetry.addData("triangle: ", gamepad2.triangle);
-        telemetry.addData("cross: ", gamepad2.cross);
-        telemetry.addData("square: ", gamepad2.square);
-        telemetry.addData("circle: ", gamepad2.circle);
-        telemetry.addData("left stick x: ", gamepad2.left_stick_x);
-        telemetry.addData("left stick y: ", gamepad2.left_stick_y);
-        telemetry.addData("right stick x: ", gamepad2.right_stick_x);
-
+        telemetry.addData("Alliance", alliance);
+        telemetry.addData("Auto State", autoState);
+        telemetry.addData("Timer (s)", "%.2f", timer.seconds());
+        telemetry.addData("Launcher Speed", launcher.getVelocity());
         telemetry.addData("Motors", "FL: %.2f, FR: %.2f, BL: %.2f, BR: %.2f",
                 frontLeftPower, frontRightPower, backLeftPower, backRightPower);
-        telemetry.addData("motorSpeed", launcher.getVelocity());
     }
 }
